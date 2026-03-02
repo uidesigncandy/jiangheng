@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>江恒广告文件格式调整</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: #000 url('assets/image%204.png') center / cover no-repeat;
+      font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      position: relative;
+      overflow: hidden;
+    }
+    body::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.35);
+      pointer-events: none;
+    }
+    .container {
+      position: relative;
+      background: rgba(255, 255, 255, 0.97);
+      border-radius: 24px;
+      padding: 56px 64px;
+      max-width: 520px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35),
+                  0 0 0 1px rgba(255, 255, 255, 0.08) inset;
+      backdrop-filter: blur(12px);
+    }
+    .brand-logo {
+      display: block;
+      width: 44px;
+      height: auto;
+      margin: 0 auto 20px;
+    }
+    h1 {
+      font-size: 1.85rem;
+      margin: 0 0 8px;
+      color: #1e293b;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      line-height: 1.3;
+    }
+    .subtitle {
+      font-size: 0.95rem;
+      color: #64748b;
+      margin: 0 0 40px;
+      font-weight: 400;
+    }
+    .button-group {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .btn {
+      width: 100%;
+      padding: 18px 24px;
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: #fff;
+      background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+      border: none;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4);
+    }
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(99, 102, 241, 0.45);
+    }
+    .btn:active {
+      transform: translateY(0);
+    }
+    .btn-secondary {
+      background: linear-gradient(135deg, #64748b 0%, #475569 100%);
+      box-shadow: 0 4px 14px rgba(71, 85, 105, 0.35);
+    }
+    .btn-secondary:hover {
+      box-shadow: 0 8px 24px rgba(71, 85, 105, 0.4);
+    }
+    .contact-section {
+      margin-top: 32px;
+      padding-top: 24px;
+      border-top: 1px solid rgba(0, 0, 0, 0.08);
+    }
+    .contact-phone {
+      font-size: 0.95rem;
+      color: #475569;
+      margin: 0 0 16px;
+      font-weight: 500;
+    }
+    .wechat-tip {
+      font-size: 0.9rem;
+      color: #64748b;
+      margin: 0 0 12px;
+    }
+    .wechat-qr {
+      display: block;
+      width: 140px;
+      height: 140px;
+      margin: 0 auto;
+      border-radius: 12px;
+      object-fit: contain;
+    }
+    .logout-wrap {
+      margin-top: 24px;
+    }
+    .logout-link {
+      font-size: 0.9rem;
+      color: #64748b;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .logout-link:hover {
+      color: #475569;
+      text-decoration: underline;
+    }
+    @media (max-width: 768px) {
+      .container {
+        padding: 40px 28px;
+        border-radius: 20px;
+      }
+      h1 {
+        font-size: 1.5rem;
+      }
+      .subtitle {
+        margin-bottom: 32px;
+        font-size: 0.9rem;
+      }
+      .btn {
+        font-size: 1rem;
+        padding: 16px 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <img src="assets/logo.png" alt="江恒广告" class="brand-logo" />
+    <h1>江恒广告 - 文件格式调整</h1>
+    <p class="subtitle">公文格式转换 · 文件调整对比</p>
+    <div class="button-group">
+      <a href="公文格式转换.html" class="btn">公文格式转换</a>
+      <button class="btn btn-secondary" id="compareBtn">文件调整对比</button>
+    </div>
+    <div class="contact-section">
+      <p class="contact-phone">联系方式：13327370564（微信同号）</p>
+      <p class="wechat-tip">扫一扫添加微信好友</p>
+      <img src="assets/二维码.png" alt="微信二维码" class="wechat-qr" />
+    </div>
+    <div class="logout-wrap">
+      <a href="login.html" class="logout-link" id="logoutBtn">退出登录</a>
+    </div>
+  </div>
+
+  <script type="module">
+    import { checkAuthRedirect, signOut } from './js/auth.js';
+
+    const ok = await checkAuthRedirect();
+    if (!ok) throw new Error('redirect');
+
+    var compareBtn = document.getElementById('compareBtn');
+    var logoutBtn = document.getElementById('logoutBtn');
+
+    compareBtn.onclick = function () {
+      window.location.href = '文件调整对比.html';
+    };
+
+    logoutBtn.addEventListener('click', async function (e) {
+      e.preventDefault();
+      try {
+        await signOut();
+      } catch (_) {}
+      window.location.href = 'login.html';
+    });
+  </script>
+</body>
+</html>

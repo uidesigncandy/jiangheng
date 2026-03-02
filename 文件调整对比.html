@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>文件调整对比</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: #f5f5f5;
+      font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+      padding: 20px;
+    }
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+    }
+    .header {
+      background: #667eea;
+      color: #fff;
+      padding: 20px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .header h1 {
+      margin: 0;
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+    .back-btn {
+      background: rgba(255, 255, 255, 0.2);
+      color: #fff;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: background 0.2s;
+    }
+    .back-btn:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+    .upload-section {
+      padding: 30px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    .upload-box {
+      border: 2px dashed #ddd;
+      border-radius: 8px;
+      padding: 30px;
+      text-align: center;
+      transition: all 0.3s;
+      background: #fafafa;
+    }
+    .upload-box:hover {
+      border-color: #667eea;
+      background: #f0f4ff;
+    }
+    .upload-box.dragover {
+      border-color: #667eea;
+      background: #e8edff;
+    }
+    .upload-box h3 {
+      margin: 0 0 15px;
+      color: #333;
+      font-size: 1.1rem;
+    }
+    .upload-box input[type="file"] {
+      display: none;
+    }
+    .upload-btn {
+      background: #667eea;
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.95rem;
+      margin-top: 10px;
+      transition: background 0.2s;
+    }
+    .upload-btn:hover {
+      background: #5568d3;
+    }
+    .file-info {
+      margin-top: 15px;
+      font-size: 0.85rem;
+      color: #666;
+    }
+    .compare-section {
+      padding: 30px;
+      display: none;
+    }
+    .compare-section.show {
+      display: block;
+    }
+    .compare-content {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-top: 20px;
+    }
+    .compare-content::before {
+      content: '';
+      position: absolute;
+      left: 50%;
+      top: 0;
+      bottom: 0;
+      width: 1px;
+      background: #e0e0e0;
+      transform: translateX(-12px);
+    }
+    .compare-panel {
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    .compare-panel-header {
+      background: #f8f8f8;
+      padding: 12px 16px;
+      border-bottom: 1px solid #e0e0e0;
+      font-weight: 600;
+      color: #333;
+    }
+    .compare-panel-content {
+      padding: 24px;
+      max-height: 700px;
+      overflow-y: auto;
+      background: #fafafa;
+      font-size: 15px;
+      line-height: 2;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      font-family: "PingFang SC", "Microsoft YaHei", "SimSun", serif;
+    }
+    .diff-unchanged {
+      color: #666;
+      opacity: 0.7;
+    }
+    .diff-line {
+      color: #333;
+      margin-bottom: 4px;
+      padding: 2px 0;
+    }
+    .diff-removed {
+      background: #fee;
+      color: #c33;
+      text-decoration: line-through;
+      padding: 2px 6px;
+      border-radius: 4px;
+      border-left: 3px solid #f88;
+      font-weight: 500;
+    }
+    .diff-added {
+      background: #efe;
+      color: #2a7;
+      padding: 2px 6px;
+      border-radius: 4px;
+      border-left: 3px solid #6c8;
+      font-weight: 500;
+    }
+    .compare-panel-header {
+      background: #f8f8f8;
+      padding: 14px 20px;
+      border-bottom: 2px solid #e0e0e0;
+      font-weight: 600;
+      color: #333;
+      font-size: 15px;
+    }
+    .compare-panel {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .action-buttons {
+      padding: 16px;
+      border-top: 1px solid #ddd;
+      background: #f5f5f5;
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+    }
+    .btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    .btn-primary {
+      background: #667eea;
+      color: #fff;
+    }
+    .btn-primary:hover {
+      background: #5568d3;
+    }
+    .btn-secondary {
+      background: #6c757d;
+      color: #fff;
+    }
+    .btn-secondary:hover {
+      background: #5a6268;
+    }
+    .msg {
+      padding: 12px 20px;
+      margin: 0 30px 20px;
+      border-radius: 6px;
+      font-size: 0.9rem;
+    }
+    .msg.err {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+    .msg.ok {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    @media (max-width: 768px) {
+      .compare-content {
+        grid-template-columns: 1fr;
+      }
+      .upload-section {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <script type="module">
+    import { checkAuthRedirect } from './js/auth.js';
+    await checkAuthRedirect();
+  </script>
+  <div class="container">
+    <div class="header">
+      <h1>文件调整对比</h1>
+      <button class="back-btn" onclick="window.location.href='江恒广告文件格式调整.html'">返回首页</button>
+    </div>
+    
+    <div class="upload-section">
+      <div class="upload-box" id="file1Box">
+        <h3>源文件</h3>
+        <input type="file" id="file1" accept=".docx,.pdf,.xlsx,.xls,.txt" />
+        <button class="upload-btn" onclick="document.getElementById('file1').click()">选择文件</button>
+        <div class="file-info" id="file1Info"></div>
+      </div>
+      <div class="upload-box" id="file2Box">
+        <h3>调整文件</h3>
+        <input type="file" id="file2" accept=".docx,.pdf,.xlsx,.xls,.txt" />
+        <button class="upload-btn" onclick="document.getElementById('file2').click()">选择文件</button>
+        <div class="file-info" id="file2Info"></div>
+      </div>
+    </div>
+
+    <div id="msg"></div>
+
+    <div class="compare-section" id="compareSection">
+      <div class="compare-content">
+        <div class="compare-panel">
+          <div class="compare-panel-header">源文件</div>
+          <div class="compare-panel-content" id="content1"></div>
+        </div>
+        <div class="compare-panel">
+          <div class="compare-panel-header">调整文件</div>
+          <div class="compare-panel-content" id="content2"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="action-buttons" id="actionButtons" style="display: none;">
+      <button class="btn btn-primary" id="compareBtn">开始对比</button>
+      <button class="btn btn-primary" id="aiPreviewBtn" style="background: #28a745;">AI预览调整部分</button>
+      <button class="btn btn-secondary" id="resetBtn">重置</button>
+    </div>
+  </div>
+
+  <script type="module">
+    let file1 = null, file2 = null;
+    let file1Text = '', file2Text = '';
+    const file1Input = document.getElementById('file1');
+    const file2Input = document.getElementById('file2');
+    const file1Info = document.getElementById('file1Info');
+    const file2Info = document.getElementById('file2Info');
+    const content1 = document.getElementById('content1');
+    const content2 = document.getElementById('content2');
+    const compareSection = document.getElementById('compareSection');
+    const actionButtons = document.getElementById('actionButtons');
+    const compareBtn = document.getElementById('compareBtn');
+    const aiPreviewBtn = document.getElementById('aiPreviewBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const msg = document.getElementById('msg');
+
+    function setMsg(text, type = '') {
+      msg.textContent = text;
+      msg.className = 'msg ' + type;
+      msg.style.display = text ? 'block' : 'none';
+    }
+
+    function getFileType(fileName) {
+      const ext = fileName.toLowerCase();
+      if (ext.endsWith('.docx')) return 'docx';
+      if (ext.endsWith('.pdf')) return 'pdf';
+      if (ext.endsWith('.xlsx') || ext.endsWith('.xls')) return 'excel';
+      if (ext.endsWith('.txt')) return 'txt';
+      return '';
+    }
+
+    async function extractText(file, fileType) {
+      const arrayBuffer = await file.arrayBuffer();
+      
+      if (fileType === 'docx') {
+        const mammoth = (await import('https://esm.sh/mammoth@1.8.0')).default;
+        const result = await mammoth.extractRawText({ arrayBuffer });
+        return result.value;
+      } else if (fileType === 'pdf') {
+        const pdfjsLib = await import('https://esm.sh/pdfjs-dist@4.0.379');
+        const { getDocument } = pdfjsLib;
+        const pdf = await getDocument({ data: arrayBuffer }).promise;
+        let text = '';
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i);
+          const textContent = await page.getTextContent();
+          text += textContent.items.map(item => item.str).join(' ') + '\n';
+        }
+        return text;
+      } else if (fileType === 'excel') {
+        const XLSX = await import('https://esm.sh/xlsx@0.18.5');
+        const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+        let text = '';
+        workbook.SheetNames.forEach(sheetName => {
+          const sheet = workbook.Sheets[sheetName];
+          text += XLSX.utils.sheet_to_txt(sheet) + '\n\n';
+        });
+        return text;
+      } else if (fileType === 'txt') {
+        return await file.text();
+      }
+      return '';
+    }
+
+    function setupFileInput(input, infoElement, fileNum) {
+      input.addEventListener('change', async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        
+        const fileType = getFileType(file.name);
+        if (!fileType) {
+          setMsg('不支持的文件格式', 'err');
+          return;
+        }
+
+        if (fileNum === 1) {
+          file1 = file;
+        } else {
+          file2 = file;
+        }
+
+        infoElement.textContent = `${file.name} (${(file.size / 1024).toFixed(2)} KB)`;
+        setMsg('正在提取文本内容...', 'ok');
+
+        try {
+          const text = await extractText(file, fileType);
+          if (fileNum === 1) {
+            file1Text = text;
+          } else {
+            file2Text = text;
+          }
+          
+          if (file1 && file2 && file1Text && file2Text) {
+            actionButtons.style.display = 'flex';
+          }
+          setMsg('文件加载成功', 'ok');
+        } catch (error) {
+          setMsg('文件读取失败: ' + error.message, 'err');
+        }
+      });
+
+      // 拖拽支持
+      const box = document.getElementById(`file${fileNum}Box`);
+      box.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        box.classList.add('dragover');
+      });
+      box.addEventListener('dragleave', () => {
+        box.classList.remove('dragover');
+      });
+      box.addEventListener('drop', async (e) => {
+        e.preventDefault();
+        box.classList.remove('dragover');
+        const file = e.dataTransfer?.files?.[0];
+        if (file) {
+          input.files = e.dataTransfer.files;
+          input.dispatchEvent(new Event('change'));
+        }
+      });
+    }
+
+    // ========== 独立的文本对比功能 ==========
+    
+    // 标准化文本：移除编号差异、标题标记等
+    function normalizeTextForDiff(text) {
+      if (!text) return '';
+      
+      // 1. 移除 HTML 标签
+      let normalized = text.replace(/<[^>]+>/g, '');
+      
+      // 2. 使用用户提供的标准化函数
+      normalized = normalized
+        .replace(/\u00A0/g, ' ')     // 替换 nbsp
+        .replace(/\r/g, '')
+        .replace(/\n/g, ' ')
+        .replace(/[\t]+/g, ' ')
+        .replace(/\s+/g, ' ')
+        .replace(/^[\s]*[一二三四五六七八九十]+、\s*/g, '')
+        .replace(/^[\s]*（[一二三四五六七八九十]+）\s*/g, '')
+        .replace(/^[\s]*\d+\.?\s*/g, '')
+        .trim();
+      
+      return normalized;
+    }
+
+    // 将文本分割为词数组（中文按字符，英文按单词）
+    function tokenize(text) {
+      const tokens = [];
+      if (!text) return tokens;
+      
+      // 分词：中文按字符，英文按单词，数字和标点单独处理
+      const regex = /[\u4e00-\u9fa5]|[a-zA-Z]+|\d+|[^\u4e00-\u9fa5a-zA-Z0-9\s]|\s+/g;
+      let match;
+      
+      while ((match = regex.exec(text)) !== null) {
+        const tokenText = match[0];
+        // 对每个 token 进行标准化
+        const normalized = normalizeTextForDiff(tokenText);
+        
+        tokens.push({
+          text: tokenText,
+          index: match.index,
+          normalized: normalized
+        });
+      }
+      
+      return tokens;
+    }
+
+    // 词级 diff 算法（基于最长公共子序列）
+    function wordLevelDiff(text1, text2) {
+      // 先标准化整个文本进行快速检查
+      const normalized1 = normalizeTextForDiff(text1);
+      const normalized2 = normalizeTextForDiff(text2);
+      
+      // 如果标准化后完全相同，返回全部 equal（不进行分词对比）
+      if (normalized1 === normalized2) {
+        // 直接返回 equal 操作，使用原始文本
+        return [{ type: 'equal', token1: { text: text1 }, token2: { text: text2 } }];
+      }
+      
+      const tokens1 = tokenize(text1);
+      const tokens2 = tokenize(text2);
+      
+      // 如果分词后都为空，返回空数组
+      if (tokens1.length === 0 && tokens2.length === 0) {
+        return [];
+      }
+      
+      // 计算 LCS（最长公共子序列）
+      const m = tokens1.length;
+      const n = tokens2.length;
+      const dp = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));
+      
+      for (let i = 1; i <= m; i++) {
+        for (let j = 1; j <= n; j++) {
+          // 使用标准化后的文本进行对比
+          const norm1 = tokens1[i - 1].normalized;
+          const norm2 = tokens2[j - 1].normalized;
+          
+          // 标准化后相同，或者都是空白字符，视为相同
+          if (norm1 === norm2 || (norm1.trim() === '' && norm2.trim() === '')) {
+            dp[i][j] = dp[i - 1][j - 1] + 1;
+          } else {
+            dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
+          }
+        }
+      }
+      
+      // 回溯找出 diff 操作
+      const operations = [];
+      let i = m, j = n;
+      
+      while (i > 0 || j > 0) {
+        const norm1 = i > 0 ? tokens1[i - 1].normalized : '';
+        const norm2 = j > 0 ? tokens2[j - 1].normalized : '';
+        
+        if (i > 0 && j > 0 && (norm1 === norm2 || (norm1.trim() === '' && norm2.trim() === ''))) {
+          operations.unshift({ type: 'equal', token1: tokens1[i - 1], token2: tokens2[j - 1] });
+          i--;
+          j--;
+        } else if (j > 0 && (i === 0 || dp[i][j - 1] >= dp[i - 1][j])) {
+          operations.unshift({ type: 'add', token: tokens2[j - 1] });
+          j--;
+        } else if (i > 0) {
+          operations.unshift({ type: 'remove', token: tokens1[i - 1] });
+          i--;
+        }
+      }
+      
+      return operations;
+    }
+
+    // 渲染 diff 结果：左侧标红删除，右侧标绿新增，不变不动
+    function renderDiff(text1, text2) {
+      const operations = wordLevelDiff(text1, text2);
+      
+      let html1 = '';
+      let html2 = '';
+      
+      for (const op of operations) {
+        if (op.type === 'equal') {
+          // 不变的内容：不高亮，正常显示
+          html1 += escapeHtml(op.token1.text);
+          html2 += escapeHtml(op.token2.text);
+        } else if (op.type === 'remove') {
+          // 删除的内容：左侧标红
+          html1 += `<span class="diff-removed">${escapeHtml(op.token.text)}</span>`;
+        } else if (op.type === 'add') {
+          // 新增的内容：右侧标绿
+          html2 += `<span class="diff-added">${escapeHtml(op.token.text)}</span>`;
+        }
+      }
+      
+      return { html1, html2 };
+    }
+
+    // AI预览：只显示有变化的段落
+    function renderAIPreview(text1, text2) {
+      const paragraphs1 = splitIntoParagraphs(text1);
+      const paragraphs2 = splitIntoParagraphs(text2);
+      const maxLen = Math.max(paragraphs1.length, paragraphs2.length);
+      
+      let html1 = '';
+      let html2 = '';
+      let hasChanges = false;
+      
+      for (let i = 0; i < maxLen; i++) {
+        const para1 = paragraphs1[i] || '';
+        const para2 = paragraphs2[i] || '';
+        
+        // 标准化对比：如果标准化后完全相同，跳过
+        const normalized1 = normalizeTextForDiff(para1);
+        const normalized2 = normalizeTextForDiff(para2);
+        
+        if (normalized1 === normalized2) {
+          // 段落内容相同：跳过，不显示
+          continue;
+        }
+        
+        // 段落内容不同，进行词级 diff 对比
+        const operations = wordLevelDiff(para1, para2);
+        
+        let paraHtml1 = '';
+        let paraHtml2 = '';
+        let paraHasChange = false;
+        
+        for (const op of operations) {
+          if (op.type === 'equal') {
+            // 不变的内容：不显示
+            continue;
+          } else if (op.type === 'remove') {
+            // 删除的内容：左侧标红
+            paraHtml1 += `<span class="diff-removed">${escapeHtml(op.token.text)}</span>`;
+            paraHasChange = true;
+          } else if (op.type === 'add') {
+            // 新增的内容：右侧标绿
+            paraHtml2 += `<span class="diff-added">${escapeHtml(op.token.text)}</span>`;
+            paraHasChange = true;
+          }
+        }
+        
+        // 只有当段落有变化时才添加
+        if (paraHasChange) {
+          // 将段落结果按换行符分割，保持格式
+          const lines1 = paraHtml1.split('\n');
+          const lines2 = paraHtml2.split('\n');
+          const maxLines = Math.max(lines1.length, lines2.length);
+          
+          for (let j = 0; j < maxLines; j++) {
+            html1 += `<div class="diff-line">${lines1[j] || '<span style="color: #999;">（已删除）</span>'}</div>`;
+            html2 += `<div class="diff-line">${lines2[j] || '<span style="color: #999;">（已删除）</span>'}</div>`;
+          }
+          
+          // 段落之间添加空行（除了最后一个段落）
+          if (i < maxLen - 1) {
+            html1 += '<div class="diff-unchanged" style="height: 8px;"></div>';
+            html2 += '<div class="diff-unchanged" style="height: 8px;"></div>';
+          }
+          
+          hasChanges = true;
+        }
+      }
+      
+      // 如果没有变化，显示提示
+      if (!hasChanges) {
+        html1 = '<div class="diff-unchanged" style="text-align: center; color: #999; padding: 20px;">未发现调整内容</div>';
+        html2 = '<div class="diff-unchanged" style="text-align: center; color: #999; padding: 20px;">未发现调整内容</div>';
+      }
+      
+      return { html1, html2 };
+    }
+
+    // 将文本分割为段落
+    function splitIntoParagraphs(text) {
+      if (!text) return [];
+      // 按双换行符或空行分割段落
+      const paragraphs = text.split(/\n\s*\n/).filter(p => p.trim().length > 0);
+      // 如果没有双换行符，按单换行符分割
+      if (paragraphs.length === 1 && text.includes('\n')) {
+        return text.split('\n').filter(p => p.trim().length > 0);
+      }
+      return paragraphs;
+    }
+
+    // 优化的文案对比算法，使用词级 diff，按段落对比
+    function highlightChanges(text1, text2) {
+      const paragraphs1 = splitIntoParagraphs(text1);
+      const paragraphs2 = splitIntoParagraphs(text2);
+      const maxLen = Math.max(paragraphs1.length, paragraphs2.length);
+      
+      let html1 = '';
+      let html2 = '';
+      
+      for (let i = 0; i < maxLen; i++) {
+        const para1 = paragraphs1[i] || '';
+        const para2 = paragraphs2[i] || '';
+        
+        // 标准化对比：如果标准化后完全相同，不高亮
+        const normalized1 = normalizeTextForDiff(para1);
+        const normalized2 = normalizeTextForDiff(para2);
+        
+        if (normalized1 === normalized2 && normalized1 !== '') {
+          // 段落内容相同，正常显示，不高亮
+          const lines1 = para1.split('\n');
+          const lines2 = para2.split('\n');
+          const maxLines = Math.max(lines1.length, lines2.length);
+          for (let j = 0; j < maxLines; j++) {
+            const line1 = lines1[j] || '';
+            const line2 = lines2[j] || '';
+            if (line1.trim() || line2.trim()) {
+              html1 += `<div class="diff-line">${escapeHtml(line1)}</div>`;
+              html2 += `<div class="diff-line">${escapeHtml(line2)}</div>`;
+            }
+          }
+        } else {
+          // 段落内容不同，进行词级 diff 对比
+          const operations = wordLevelDiff(para1, para2);
+          
+          let paraHtml1 = '';
+          let paraHtml2 = '';
+          
+          for (const op of operations) {
+            if (op.type === 'equal') {
+              // 不变的内容：不高亮，正常显示
+              paraHtml1 += escapeHtml(op.token1.text);
+              paraHtml2 += escapeHtml(op.token2.text);
+            } else if (op.type === 'remove') {
+              // 删除的内容：左侧标红
+              paraHtml1 += `<span class="diff-removed">${escapeHtml(op.token.text)}</span>`;
+            } else if (op.type === 'add') {
+              // 新增的内容：右侧标绿
+              paraHtml2 += `<span class="diff-added">${escapeHtml(op.token.text)}</span>`;
+            }
+          }
+          
+          // 将段落结果按换行符分割，保持格式
+          const lines1 = paraHtml1.split('\n');
+          const lines2 = paraHtml2.split('\n');
+          const maxLines = Math.max(lines1.length, lines2.length);
+          
+          for (let j = 0; j < maxLines; j++) {
+            const line1 = lines1[j] || '';
+            const line2 = lines2[j] || '';
+            if (line1.trim() || line2.trim()) {
+              html1 += `<div class="diff-line">${line1}</div>`;
+              html2 += `<div class="diff-line">${line2}</div>`;
+            }
+          }
+        }
+        
+        // 段落之间添加空行（除了最后一个段落）
+        if (i < maxLen - 1) {
+          html1 += '<div style="height: 8px;"></div>';
+          html2 += '<div style="height: 8px;"></div>';
+        }
+      }
+      
+      return { html1, html2 };
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    compareBtn.onclick = () => {
+      if (!file1Text || !file2Text) {
+        setMsg('请先上传两个文件', 'err');
+        return;
+      }
+
+      setMsg('正在对比文案内容...', 'ok');
+      setTimeout(() => {
+        const diff = highlightChanges(file1Text, file2Text);
+        content1.innerHTML = diff.html1;
+        content2.innerHTML = diff.html2;
+        compareSection.classList.add('show');
+        setMsg('对比完成，调整过的内容已高亮显示', 'ok');
+      }, 100);
+    };
+
+    aiPreviewBtn.onclick = () => {
+      if (!file1Text || !file2Text) {
+        setMsg('请先上传两个文件', 'err');
+        return;
+      }
+
+      setMsg('正在生成AI预览（仅显示调整部分）...', 'ok');
+      setTimeout(() => {
+        const preview = renderAIPreview(file1Text, file2Text);
+        content1.innerHTML = preview.html1;
+        content2.innerHTML = preview.html2;
+        compareSection.classList.add('show');
+        setMsg('AI预览完成，仅显示有调整的部分', 'ok');
+      }, 100);
+    };
+
+    resetBtn.onclick = () => {
+      file1 = file2 = null;
+      file1Text = file2Text = '';
+      file1Input.value = '';
+      file2Input.value = '';
+      file1Info.textContent = '';
+      file2Info.textContent = '';
+      content1.textContent = '';
+      content2.textContent = '';
+      compareSection.classList.remove('show');
+      actionButtons.style.display = 'none';
+      setMsg('');
+    };
+
+    setupFileInput(file1Input, file1Info, 1);
+    setupFileInput(file2Input, file2Info, 2);
+  </script>
+</body>
+</html>
